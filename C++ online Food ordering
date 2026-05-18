@@ -1,0 +1,1145 @@
+#include <iostream>
+
+#include <fstream>
+
+#include <string>
+
+#include <cctype>
+
+using namespace std;
+
+
+
+// ================= USER =================
+
+struct User {
+
+    string name, phone, email, password;
+
+};
+
+
+
+User users[100];
+
+int userCount = 0;
+
+
+
+// ================= FOOD =================
+
+struct Food {
+
+    string name;
+
+    double price;
+
+    bool available;
+
+    string category;
+
+    Food* next;
+
+};
+
+
+
+Food* foodHead = NULL;
+
+
+
+// ================= ORDER =================
+
+struct Order {
+
+    int id;
+
+    string customer;
+
+    double total;
+
+    string status;
+
+
+
+    string items[50];
+
+    int itemCount;
+
+
+
+    string condition;
+
+    string paymentMethod;
+
+};
+
+
+
+// ================= QUEUE =================
+
+struct QNode {
+
+    Order data;
+
+    QNode* next;
+
+};
+
+
+
+QNode* frontQ = NULL;
+
+QNode* rearQ = NULL;
+
+
+
+int orderCounter = 1;
+
+
+
+// ================= QUEUE =================
+
+void enqueue(Order o) {
+
+    QNode* n = new QNode{o, NULL};
+
+    if (!rearQ) frontQ = rearQ = n;
+
+    else {
+
+        rearQ->next = n;
+
+        rearQ = n;
+
+    }
+
+}
+
+
+
+void dequeue() {
+
+    if (!frontQ) return;
+
+    QNode* t = frontQ;
+
+    frontQ = frontQ->next;
+
+    if (!frontQ) rearQ = NULL;
+
+    delete t;
+
+}
+
+
+
+// ================= VALIDATION =================
+
+bool isValidName(string s) {
+
+    for (char c : s)
+
+        if (!isalpha(c) && c != ' ') return false;
+
+    return true;
+
+}
+
+
+
+bool isValidPhone(string s) {
+
+    if (s.length() != 10) return false;
+
+    for (char c : s)
+
+        if (!isdigit(c)) return false;
+
+    return true;
+
+}
+
+
+
+bool isValidEmail(string s) {
+
+    return s.find("@gmail.com") != string::npos;
+
+}
+
+
+
+bool isValidPassword(string s) {
+
+    return s.length() == 6;
+
+}
+
+
+
+// ================= FILE =================
+
+void saveUsers() {
+
+    ofstream file("users.txt");
+
+    for (int i = 0; i < userCount; i++)
+
+        file << users[i].name << "," << users[i].phone << ","
+
+             << users[i].email << "," << users[i].password << endl;
+
+}
+
+
+
+void loadUsers() {
+
+    ifstream file("users.txt");
+
+    User u;
+
+    while (getline(file, u.name, ',')) {
+
+        getline(file, u.phone, ',');
+
+        getline(file, u.email, ',');
+
+        getline(file, u.password);
+
+        users[userCount++] = u;
+
+    }
+
+}
+
+
+
+// ================= MENU =================
+
+void addFood(string name, double price, string category) {
+
+    Food* n = new Food{name, price, true, category, NULL};
+
+    if (!foodHead) foodHead = n;
+
+    else {
+
+        Food* t = foodHead;
+
+        while (t->next) t = t->next;
+
+        t->next = n;
+
+    }
+
+}
+
+
+
+void showMenu() {
+
+    Food* t;
+
+    int i;
+
+
+
+    cout << "\n=========== MENU ===========\n";
+
+
+
+    // Food
+
+    cout << "\n--- Category 1: FOOD ---\n";
+
+    t = foodHead; i = 1;
+
+    while (t) {
+
+        if (t->category == "Food") {
+
+            cout << i << ". " << t->name << " - " << t->price;
+
+            if (!t->available) cout << " (OFF)";
+
+            cout << endl;
+
+        }
+
+        t = t->next;
+
+        i++;
+
+    }
+
+
+
+    // Traditional
+
+    cout << "\n--- Category 2: TRADITIONAL FOOD ---\n";
+
+    t = foodHead; i = 1;
+
+    while (t) {
+
+        if (t->category == "Traditional") {
+
+            cout << i << ". " << t->name << " - " << t->price;
+
+            if (!t->available) cout << " (OFF)";
+
+            cout << endl;
+
+        }
+
+        t = t->next;
+
+        i++;
+
+    }
+
+
+
+    // Drinks
+
+    cout << "\n--- Category 3: DRINKS ---\n";
+
+    t = foodHead; i = 1;
+
+    while (t) {
+
+        if (t->category == "Drink") {
+
+            cout << i << ". " << t->name << " - " << t->price;
+
+            if (!t->available) cout << " (OFF)";
+
+            cout << endl;
+
+        }
+
+        t = t->next;
+
+        i++;
+
+    }
+
+}
+
+
+
+Food* getFood(int index) {
+
+    Food* t = foodHead;
+
+    int i = 1;
+
+    while (t) {
+
+        if (i == index) return t;
+
+        t = t->next;
+
+        i++;
+
+    }
+
+    return NULL;
+
+}
+
+
+
+// ================= ACCOUNT =================
+
+void createAccount() {
+
+    User u;
+
+    cin.ignore();
+
+
+
+    cout << "Name: ";
+
+    getline(cin, u.name);
+
+    if (!isValidName(u.name)) {
+
+        cout << "Invalid name (letters only)\n"; return;
+
+    }
+
+
+
+    cout << "Phone: ";
+
+    cin >> u.phone;
+
+    if (!isValidPhone(u.phone)) {
+
+        cout << "Invalid phone (10 digits)\n"; return;
+
+    }
+
+
+
+    cout << "Email: ";
+
+    cin >> u.email;
+
+
+
+    for (int i = 0; i < userCount; i++)
+
+        if (users[i].email == u.email) {
+
+            cout << "Email already used\n"; return;
+
+        }
+
+
+
+    if (!isValidEmail(u.email)) {
+
+        cout << "Invalid email (@gmail.com required)\n"; return;
+
+    }
+
+
+
+    cout << "Password(6): ";
+
+    cin >> u.password;
+
+
+
+    if (!isValidPassword(u.password)) {
+
+        cout << "Invalid password (6 characters)\n"; return;
+
+    }
+
+
+
+    users[userCount++] = u;
+
+    saveUsers();
+
+
+
+    cout << "Account created successfully\n";
+
+}
+
+
+
+// ================= LOGIN =================
+
+int login() {
+
+    string name, pass;
+
+    cin.ignore();
+
+
+
+    cout << "Name: ";
+
+    getline(cin, name);
+
+
+
+    int idx = -1;
+
+    for (int i = 0; i < userCount; i++)
+
+        if (users[i].name == name) idx = i;
+
+
+
+    if (idx == -1) {
+
+        cout << "User not found\n";
+
+        return -1;
+
+    }
+
+
+
+    int attempts = 3;
+
+    while (attempts--) {
+
+        cout << "Password: ";
+
+        cin >> pass;
+
+
+
+        if (users[idx].password == pass) {
+
+            cout << "Login successful\n";
+
+            return idx;
+
+        }
+
+
+
+        cout << "Incorrect password. Attempts left: " << attempts << endl;
+
+    }
+
+
+
+    return -1;
+
+}
+
+
+
+// ================= ORDER =================
+
+void placeOrder(string username) {
+
+    Order o;
+
+    o.id = orderCounter++;
+
+    o.customer = username;
+
+    o.total = 0;
+
+    o.status = "New";
+
+    o.itemCount = 0;
+
+
+
+    int choice, qty;
+
+    char more = 'y';
+
+
+
+    while (more == 'y') {
+
+        showMenu();
+
+        cout << "Choose item: ";
+
+        cin >> choice;
+
+
+
+        Food* f = getFood(choice);
+
+        if (!f || !f->available) {
+
+            cout << "Invalid selection\n";
+
+            continue;
+
+        }
+
+
+
+        cout << "Quantity: ";
+
+        cin >> qty;
+
+
+
+        o.total += f->price * qty;
+
+        o.items[o.itemCount++] = f->name + " x" + to_string(qty);
+
+
+
+        cout << "Add more? (y/n): ";
+
+        cin >> more;
+
+    }
+
+
+
+    cout << "\nTotal = " << o.total << endl;
+
+
+
+    cin.ignore();
+
+    cout << "Enter special condition: ";
+
+    getline(cin, o.condition);
+
+
+
+    int p;
+
+    cout << "\n1.Telebirr\n2.CBE\n3.Abyssinia\nChoice: ";
+
+    cin >> p;
+
+
+
+    if (p == 1) {
+
+        o.paymentMethod = "Telebirr";
+
+        cout << "Send to: 0918776543\n";
+
+    }
+
+    else if (p == 2) {
+
+        o.paymentMethod = "CBE";
+
+        cout << "Account: 1000661315345\n";
+
+    }
+
+    else {
+
+        o.paymentMethod = "Abyssinia";
+
+        cout << "Account: 68619932\n";
+
+    }
+
+
+
+    string screenshot;
+
+    cout << "Send payment screenshot: ";
+
+    cin >> screenshot;
+
+
+
+    if (screenshot.empty()) {
+
+        cout << "Payment required\n";
+
+        return;
+
+    }
+
+
+
+    enqueue(o);
+
+
+
+    cout << "\nOrder accepted\n";
+
+    cout << "Orders ahead: ";
+
+
+
+    int count = 0;
+
+    QNode* t = frontQ;
+
+    while (t) { count++; t = t->next; }
+
+
+
+    cout << count - 1 << endl;
+
+    cout << "Estimated wait: " << (count * 10) << " minutes\n";
+
+}
+
+
+
+// ================= VIEW =================
+
+void viewMyOrders(string username) {
+
+    QNode* t = frontQ;
+
+    bool found = false;
+
+
+
+    while (t) {
+
+        if (t->data.customer == username) {
+
+            found = true;
+
+            cout << "ID: " << t->data.id
+
+                 << " | Total: " << t->data.total
+
+                 << " | Status: " << t->data.status << endl;
+
+        }
+
+        t = t->next;
+
+    }
+
+
+
+    if (!found) cout << "No orders found\n";
+
+}
+
+
+
+// ================= CANCEL =================
+
+void cancelOrder(int id, string username) {
+
+    QNode* t = frontQ;
+
+
+
+    while (t) {
+
+        if (t->data.id == id && t->data.customer == username) {
+
+            if (t->data.status == "New") {
+
+                t->data.status = "Cancelled";
+
+                cout << "Order cancelled\n";
+
+            } else {
+
+                cout << "Cannot cancel\n";
+
+            }
+
+            return;
+
+        }
+
+        t = t->next;
+
+    }
+
+
+
+    cout << "Order not found\n";
+
+}
+
+
+
+// ================= MENU MANAGEMENT =================
+
+void manageMenu() {
+
+    int ch;
+
+    do {
+
+        cout << "\n1.Add 2.Edit 3.Toggle 0.Back\n";
+
+        cin >> ch;
+
+
+
+        if (ch == 1) {
+
+            string n, c;
+
+            double p;
+
+            cout << "Name: "; cin >> n;
+
+            cout << "Price: "; cin >> p;
+
+            cout << "Category(Food/Traditional/Drink): "; cin >> c;
+
+            addFood(n, p, c);
+
+        }
+
+
+
+        else if (ch == 2) {
+
+            showMenu();
+
+            int i; cin >> i;
+
+            Food* f = getFood(i);
+
+            if (f) {
+
+                cout << "New name: "; cin >> f->name;
+
+                cout << "New price: "; cin >> f->price;
+
+            }
+
+        }
+
+
+
+        else if (ch == 3) {
+
+            showMenu();
+
+            int i; cin >> i;
+
+            Food* f = getFood(i);
+
+            if (f) f->available = !f->available;
+
+        }
+
+
+
+    } while (ch != 0);
+
+}
+
+void saveOrders() {
+
+    ofstream file("orders.txt");
+
+
+
+    QNode* t = frontQ;
+
+
+
+    while (t != NULL) {
+
+
+
+        file << t->data.id << ","
+
+             << t->data.customer << ","
+
+             << t->data.total << ","
+
+             << t->data.status << ","
+
+             << t->data.itemCount;
+
+
+
+        for (int i = 0; i < t->data.itemCount; i++) {
+
+            file << "," << t->data.items[i];
+
+        }
+
+
+
+        file << "," << t->data.condition
+
+             << "," << t->data.paymentMethod
+
+             << endl;
+
+
+
+        t = t->next;
+
+    }
+
+
+
+    file.close();
+
+}
+
+
+
+// ================= ADMIN =================
+
+void adminPanel() {
+
+    int ch;
+
+    do {
+
+        cout << "\n1.View Orders\n2.Process\n3.Menu\n0.Exit\n";
+
+        cin >> ch;
+
+
+
+        if (ch == 1) {
+
+            QNode* t = frontQ;
+
+
+
+            while (t) {
+
+                cout << "\nID: " << t->data.id;
+
+                cout << "\nCustomer: " << t->data.customer;
+
+
+
+                cout << "\nItems:\n";
+
+                for (int i = 0; i < t->data.itemCount; i++)
+
+                    cout << " - " << t->data.items[i] << endl;
+
+
+
+                cout << "Total: " << t->data.total << endl;
+
+                cout << "Status: " << t->data.status << endl;
+
+
+
+                t = t->next;
+
+            }
+
+        }
+
+
+
+       else if (ch == 2) {
+
+
+
+    // Step 2: Check if queue is empty
+
+    if (frontQ == NULL) {
+
+        // Step 3: If empty display message
+
+        cout << "No orders in queue\n";
+
+    }
+
+
+
+    else {
+
+
+
+        // Step 4: Get front order
+
+        Order temp = frontQ->data;
+
+
+
+        // Remove it from queue
+
+        dequeue();
+
+
+
+        int statusChoice;
+
+
+
+        cout << "\nOrder ID: " << temp.id << endl;
+
+        cout << "1. Preparing\n";
+
+        cout << "2. Ready\n";
+
+        cout << "Choose status: ";
+
+        cin >> statusChoice;
+
+
+
+        // Update status
+
+        if (statusChoice == 1) {
+
+            temp.status = "Preparing";
+
+        }
+
+        else {
+
+            temp.status = "Ready";
+
+            cout << "Customer notified by email\n";
+
+        }
+
+
+
+        // Add it back to queue
+
+        enqueue(temp);
+
+
+
+        saveOrders();
+
+
+
+        cout << "Order updated successfully\n";
+
+    }
+
+}
+
+        else if (ch == 3) manageMenu();
+
+
+
+    } while (ch != 0);
+
+}
+
+
+
+// ================= MAIN =================
+
+int main() {
+
+    loadUsers();
+
+
+
+    // Food
+
+    addFood("Special Burger", 550, "Food");
+
+    addFood("Cheese Burger", 400, "Food");
+
+    addFood("Normal Burger", 300, "Food");
+
+    addFood("Special Pizza", 500, "Food");
+
+    addFood("Cheese Pizza", 450, "Food");
+
+    addFood("Normal Pizza", 350, "Food");
+
+
+
+    // Traditional
+
+    addFood("Shiro", 180, "Traditional");
+
+    addFood("Firfir", 150, "Traditional");
+
+    addFood("Yetsom Agelgl", 700, "Traditional");
+
+    addFood("Yefsk Agelgl", 1000, "Traditional");
+
+    addFood("Tibs", 350, "Traditional");
+
+    addFood("Kikil", 400, "Traditional");
+
+    addFood("Kuanta Firfir", 300, "Traditional");
+
+    addFood("Sga Firfir", 250, "Traditional");
+
+
+
+    // Drinks
+
+    addFood("CocaCola", 80, "Drink");
+
+    addFood("Pepsi", 80, "Drink");
+
+    addFood("Mirinda", 80, "Drink");
+
+    addFood("Sprite", 80, "Drink");
+
+    addFood("Tea", 40, "Drink");
+
+    addFood("Coffee", 60, "Drink");
+
+
+
+    int ch;
+
+
+
+    do {
+
+        cout << "\n1.Register\n2.Login\n3.Admin\n0.Exit\n";
+
+        cin >> ch;
+
+
+
+        if (ch == 1) createAccount();
+
+
+
+        else if (ch == 2) {
+
+            int u = login();
+
+
+
+            if (u != -1) {
+
+                int c;
+
+                do {
+
+                    cout << "\n1.Order\n2.View\n3.Cancel\n0.Logout\n";
+
+                    cin >> c;
+
+
+
+                    if (c == 1) placeOrder(users[u].name);
+
+                    else if (c == 2) viewMyOrders(users[u].name);
+
+                    else if (c == 3) {
+
+                        int id;
+
+                        cout << "Enter ID: ";
+
+                        cin >> id;
+
+                        cancelOrder(id, users[u].name);
+
+                    }
+
+
+
+                } while (c != 0);
+
+            }
+
+        }
+
+
+
+        else if (ch == 3) {
+
+            string pass;
+
+            cout << "Admin password: ";
+
+            cin >> pass;
+
+            if (pass == "admin123") adminPanel();
+
+        }
+
+
+
+    } while (ch != 0);
+
+
+
+    return 0;
+
+}
+
+
